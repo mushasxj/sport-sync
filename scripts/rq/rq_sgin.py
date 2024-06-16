@@ -34,7 +34,8 @@ class RqSgin:
             "Host": "rq.runningquotient.cn",
             "Origin": "https://rq.runningquotient.cn",
             "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 14_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148",
-            "Referer": f"https://rq.runningquotient.cn/Minisite/SignIn/index?userId={userId}&token={token}",
+            # "Referer": f"https://rq.runningquotient.cn/Minisite/SignIn/index?userId={userId}&token={token}",
+            "Referer": "https://rq.runningquotient.cn/Minisite/SignIn/index",
             "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8"
         }
         ## RQ用户ID
@@ -57,13 +58,13 @@ class RqSgin:
         ## 10次阈值，超过10次都登录不了不执行等下一轮再执行了
         while not signVerifyCodeStatus and i <= threshold:
           try:
-              signVerifyCode = await self.getSignVerifyCode(PHPSESSID)
+              # signVerifyCode = await self.getSignVerifyCode(PHPSESSID)
               
               ## 执行签到
               response = await self.req.post(
                   siginUrl,
                   headers=self.headers,
-                  data={'codes': signVerifyCode}
+                  # data={'codes': signVerifyCode}
               )
               result = response.json()
               print(result)
@@ -103,7 +104,7 @@ class RqSgin:
     async def getSiginPHPSESSID(self):
         try:
             response = await self.req.get(
-                self.headers.get("Referer")
+                 f"https://rq.runningquotient.cn/Minisite/SignIn/index?userId={self.userId}&token={self.token}",
             )
             return response.cookies['PHPSESSID']
         except Exception as err:
@@ -149,8 +150,8 @@ async def rq_sigin(email, password, AES_KEY):
                         aesChiper.decrypt(encrypt_access_token)
                     )
                     ## 登录一次更新一次时间保证action不掉线
-                    db.execute('''UPDATE user_info SET update_date = datetime('now','localtime') ''')
                 await rqs.sigin()
+                db.execute('''UPDATE user_info SET update_date = datetime('now','localtime') ''')
                 return
             
         ## 如果数据库中存储的帐号条数大于一条默认全部删除登录后再插入一条保持数据的唯一
